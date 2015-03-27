@@ -58,7 +58,7 @@ def enumerate_mp():
     return fl
 
 def parseargs():
-    global threshold_percent
+    global size_threshold_warning, threshold_percent, size_threshold_critical
     parser = argparse.ArgumentParser(description = 'Check usage of disks, designed for use with icinga or nagios')
     parser.add_argument('-v', '--verbose', action='count', help='Change the program verbosity, by default program prints nothing unless there is some error')
     parser.add_argument('-V', '--version', version='check_disk 1.0.0.0', action='version')
