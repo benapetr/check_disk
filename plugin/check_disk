@@ -79,7 +79,7 @@ def parseargs():
     if (args.critical.endswith("%")):
         if (not threshold_percent):
             raise Exception("Can't mix percent and byte thresholds")
-        size_threshold_critical = int(args.warning[:args.critical.index("%")])
+        size_threshold_critical = int(args.critical[:args.critical.index("%")])
     else:
         size_threshold_critical = int(args.critical)
         threshold_percent = False
