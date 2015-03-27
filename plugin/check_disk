@@ -65,6 +65,7 @@ def parseargs():
     parser.add_argument('-X', '--exclude-type', type=str, action='append', help="Ignores a fs")
     parser.add_argument('-x', '--exclude_device', type=str, action='append', help="Ignores a device mounted on specified path")
     parser.add_argument('-A', '--all', help="Explicitly select all paths. This is equivalent to -R '.*'", action='store_false')
+    parser.add_argument('-i', '--ignore-ereg-path', type=str, action='append', help="Ignores a regex of device mounted on specified path")
     args = parser.parse_args()
     if (args.verbose is None):
         args.verbose = 0;
