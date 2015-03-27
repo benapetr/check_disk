@@ -20,6 +20,13 @@ size_threshold_warning = 20
 size_threshold_critical = 5
 threshold_percent = True
 
+def fs_ignored(fs):
+    if (fs == "rpc_pipefs"):
+        return True
+    if (fs == "procfs"):
+        return True
+    return False
+
 def is_ignored(mp):
     if (args.exclude_device is not None and mp in args.exclude_device):
         return True
@@ -46,7 +53,7 @@ def enumerate_mp():
         ls = line.split(' ');
         if (len(ls) < 2):
             raise Exception("Not enough information about mount: " + line);
-        if (not ls[1] in fl and not is_ignored(ls[1])):
+        if (not ls[1] in fl and not is_ignored(ls[1]) and not fs_ignored(ls[0])):
             fl.append(ls[1])
     return fl
 
