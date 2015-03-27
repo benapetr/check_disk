@@ -1,0 +1,123 @@
+#!/usr/bin/env python
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+import argparse, sys, os
+
+return_code = 0
+text = ""
+warnings = ""
+criticals = ""
+size_threshold_warning = 20
+size_threshold_critical = 5
+threshold_percent = True
+
+def is_ignored(mp):
+    if (mp == "/proc" or mp.startswith("/proc/")):
+        return True
+    if (mp.startswith("/dev/")):
+        return True
+    if (mp.startswith("/sys/")):
+        return True
+    if (mp == "/run" or mp.startswith("/run/")):
+        return True
+    if (mp == "/sys" or mp == "/dev"):
+        return True
+    return False
+
+# this function returns list of all mounted mount points
+def enumerate_mp():
+    #open /proc/mounts
+    mounts = []
+    with open("/proc/mounts") as mf:
+        mounts = mf.readlines()
+    fl = []
+    for line in mounts:
+        ls = line.split(' ');
+        if (len(ls) < 2):
+            raise Exception("Not enough information about mount: " + line);
+        if (not ls[1] in fl and not is_ignored(ls[1])):
+            fl.append(ls[1])
+    return fl
+
+def parseargs():
+    global threshold_percent
+    parser = argparse.ArgumentParser(description = 'Check usage of all disks, designed for use with icinga or nagios')
+    parser.add_argument('-v', '--verbose', action='count', help='Change the program verbosity, by default program prints nothing unless there is some error')
+    parser.add_argument('-V', '--version', version='check_disk 1.0.0.0', action='version')
+    parser.add_argument('-w', '--warning', type=str, default="20%", help='Set warning threshold either in percents (if suffixed with perc symbol or bytes)')
+    parser.add_argument('-c', '--critical', type=str, default="5%", help="Set critical threshold either in percents or in bytes")
+    args = parser.parse_args()
+    if (args.verbose is None):
+        args.verbose = 0;
+    if (args.warning.endswith("%")):
+        size_threshold_warning = int(args.warning[:args.warning.index("%")])
+    else:
+        size_threshold_warning = int(args.warning)
+        threshold_percent = False
+    if (args.critical.endswith("%")):
+        if (not threshold_percent):
+            raise Exception("Can't mix percent and byte thresholds")
+        size_threshold_warning = int(args.warning[:args.critical.index("%")])
+    else:
+        size_threshold_critical = int(args.critical)
+        threshold_percent = False
+    return args;
+
+def is_warning(percent, free):
+    if (threshold_percent):
+        return percent <= size_threshold_warning
+    else:
+        return free <= size_threshold_warning
+
+def is_critical(percent, free):
+    if (threshold_percent):
+        return percent <= size_threshold_critical
+    else:
+        return free <= size_threshold_critical
+
+def get_result(mp):
+    global warnings, criticals, text, return_code
+    stat = os.statvfs(mp);
+    size = float(stat.f_bsize * stat.f_blocks)
+    if (size == 0):
+        raise Exception("size of " + mp + " is 0");
+    free = float(stat.f_bsize * stat.f_bavail)
+    free_percent = int((free / size) * 100)
+    ms = int(size / 1024 / 1024)
+    mf = int(free / 1024 / 1024)
+    result = mp + " (" + str(free_percent) + "% free; " + str(mf) + "MB/" + str(ms) + "MB)"
+    if (is_critical(free_percent, free)):
+        criticals += result + " "
+        return_code = 2
+    elif (is_warning(free_percent, free)):
+        if (return_code == 0):
+             return_code = 1
+        warnings += result + " "
+    else:
+        text += result + " "
+        
+
+args = parseargs();
+mounts = enumerate_mp();
+
+for mount in mounts:
+    get_result(mount)
+
+status = "OK"
+if (return_code == 1):
+    status = "WARNING"
+if (return_code == 2):
+    status = "CRITICAL"
+
+print (status + " " + criticals + warnings + text);
+
+sys.exit(return_code);
