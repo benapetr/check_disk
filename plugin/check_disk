@@ -131,7 +131,6 @@ if (return_code == 1):
 if (return_code == 2):
     status = "CRITICAL"
 
-print(str(args.all))
 print (status + " " + criticals + warnings + text);
 
 sys.exit(return_code);
