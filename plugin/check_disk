@@ -23,6 +23,8 @@ threshold_percent = True
 def fs_ignored(fs):
     if (args.exclude_type is not None and fs in args.exclude_type):
         return True
+    if (not args.all and fs == "rpc_pipefs"):
+        return True
     return False
 
 def is_ignored(mp):
@@ -64,7 +66,7 @@ def parseargs():
     parser.add_argument('-c', '--critical', type=str, default="5%", help="Set critical threshold either in percents or in bytes")
     parser.add_argument('-X', '--exclude-type', type=str, action='append', help="Ignores a fs")
     parser.add_argument('-x', '--exclude_device', type=str, action='append', help="Ignores a device mounted on specified path")
-    parser.add_argument('-A', '--all', help="Explicitly select all paths. This is equivalent to -R '.*'", action='store_false')
+    parser.add_argument('-A', '--all', help="Explicitly select all paths. This is equivalent to -R '.*'", action='store_true')
     parser.add_argument('-i', '--ignore-ereg-path', type=str, action='append', help="Ignores a regex of device mounted on specified path")
     args = parser.parse_args()
     if (args.verbose is None):
@@ -129,6 +131,7 @@ if (return_code == 1):
 if (return_code == 2):
     status = "CRITICAL"
 
+print(str(args.all))
 print (status + " " + criticals + warnings + text);
 
 sys.exit(return_code);
