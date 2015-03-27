@@ -21,9 +21,7 @@ size_threshold_critical = 5
 threshold_percent = True
 
 def fs_ignored(fs):
-    if (fs == "rpc_pipefs"):
-        return True
-    if (fs == "procfs"):
+    if (args.exclude_type is not None and fs in args.exclude_type):
         return True
     return False
 
@@ -64,7 +62,9 @@ def parseargs():
     parser.add_argument('-V', '--version', version='check_disk 1.0.0.0', action='version')
     parser.add_argument('-w', '--warning', type=str, default="20%", help='Set warning threshold either in percents (if suffixed with perc symbol or bytes)')
     parser.add_argument('-c', '--critical', type=str, default="5%", help="Set critical threshold either in percents or in bytes")
+    parser.add_argument('-X', '--exclude-type', type=str, action='append', help="Ignores a fs")
     parser.add_argument('-x', '--exclude_device', type=str, action='append', help="Ignores a device mounted on specified path")
+    parser.add_argument('-A', '--all', help="Explicitly select all paths. This is equivalent to -R '.*'", action='store_false')
     args = parser.parse_args()
     if (args.verbose is None):
         args.verbose = 0;
