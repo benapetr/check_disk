@@ -21,6 +21,8 @@ size_threshold_critical = 5
 threshold_percent = True
 
 def is_ignored(mp):
+    if (args.exclude_device is not None and mp in args.exclude_device):
+        return True
     if (mp == "/proc" or mp.startswith("/proc/")):
         return True
     if (mp.startswith("/dev/")):
@@ -50,11 +52,12 @@ def enumerate_mp():
 
 def parseargs():
     global threshold_percent
-    parser = argparse.ArgumentParser(description = 'Check usage of all disks, designed for use with icinga or nagios')
+    parser = argparse.ArgumentParser(description = 'Check usage of disks, designed for use with icinga or nagios')
     parser.add_argument('-v', '--verbose', action='count', help='Change the program verbosity, by default program prints nothing unless there is some error')
     parser.add_argument('-V', '--version', version='check_disk 1.0.0.0', action='version')
     parser.add_argument('-w', '--warning', type=str, default="20%", help='Set warning threshold either in percents (if suffixed with perc symbol or bytes)')
     parser.add_argument('-c', '--critical', type=str, default="5%", help="Set critical threshold either in percents or in bytes")
+    parser.add_argument('-x', '--exclude_device', type=str, action='append', help="Ignores a device mounted on specified path")
     args = parser.parse_args()
     if (args.verbose is None):
         args.verbose = 0;
